@@ -1,0 +1,39 @@
+
+version: "3.8"
+services:
+  mongo_compose:
+    container_name: mongo_compose
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - db-compose-data:/data/db
+
+  mexpress_compose:
+    container_name: mexpress_compose
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment: 
+      ME_CONFIG_BASICAUTH_USERNAME: DASistemas
+      ME_CONFIG_BASICAUTH_PASSWORD: ex-especial567
+      ME_CONFIG_MONGODB_SERVER: mongo_compose
+    depends_on: 
+      - mongo_compose
+
+  go_compose:
+    container_name: go_compose
+    build: ./populate/
+
+  go_api_compose:
+    container_name: go_api_compose
+    build: ./api/
+    ports:
+      - "7777:7777"
+    
+
+volumes:
+  db-compose-data:
+
