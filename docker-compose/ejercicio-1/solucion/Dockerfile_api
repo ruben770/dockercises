@@ -1,0 +1,19 @@
+FROM golang:alpine
+
+COPY go.mod /practica/
+COPY go.sum /practica/
+
+WORKDIR /practica/
+RUN go mod download
+
+COPY /cmd/api/main.go /practica/cmd/api/
+COPY /pkg/mongo/ /practica/pkg/mongo/
+COPY /pkg/model/ /practica/pkg/model/
+COPY /pkg/api/ /practica/pkg/api/
+
+WORKDIR /practica/cmd/api/
+RUN go build -o /practica/bin/api .
+
+WORKDIR /practica/bin/
+
+CMD ./api

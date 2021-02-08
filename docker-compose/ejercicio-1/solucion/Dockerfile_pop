@@ -1,0 +1,19 @@
+FROM golang:alpine
+
+COPY go.mod /practica/
+COPY go.sum /practica/
+
+WORKDIR /practica/
+RUN go mod download
+
+COPY /cmd/populate/main.go /practica/cmd/populate/
+COPY /pkg/mongo/ /practica/pkg/mongo/
+COPY /pkg/model/ /practica/pkg/model/
+COPY people.xml /practica/
+
+WORKDIR /practica/cmd/populate/
+RUN go build -o /practica/bin/populate .
+
+WORKDIR /practica/bin/
+
+CMD ./populate

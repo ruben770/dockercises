@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"context"
@@ -10,36 +10,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/ruben770/dockercises/docker-compose/ejercicio-1/solucion/pkg/model"
+	"github.com/ruben770/dockercises/docker-compose/ejercicio-1/solucion/pkg/mongo"
 )
-
-var people *mongo.Collection
-
-func main() {
-	client, err := GetMongoClient()
-	if err != nil {
-		panic(err)
-	}
-	defer client.Disconnect(context.TODO())
-
-	people = client.Database("compose").Collection("people")
-
-	r := setRoutes()
-
-	http.ListenAndServe(":7777", r)
-}
-
-func setRoutes() http.Handler {
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Route("/people", func(r chi.Router) {
-		r.Get("/", getPeople)
-		r.Get("/{personId}", getPerson)
-	})
-	return r
-}
 
 func getPerson(w http.ResponseWriter, r *http.Request) {
 	personId := chi.URLParam(r, "personId")
@@ -47,10 +20,9 @@ func getPerson(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Resource not found", 404)
 		return
 	}
-	person := &Person{}
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+	person := &model.Person{}
 	id, err := strconv.Atoi(personId)
-	err = people.FindOne(ctx, bson.M{"_id": id}).Decode(person)
+	err = mongo.Conn.FindPerson(id, person)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Person with the id %v was not found.", personId), 404)
 		return
@@ -61,17 +33,17 @@ func getPerson(w http.ResponseWriter, r *http.Request) {
 
 func getPeople(w http.ResponseWriter, r *http.Request) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
-	cur, err := people.Find(ctx, bson.M{})
+	cur, err := mongo.Conn.FindAll()
 	if err != nil {
 		http.Error(w, http.StatusText(404), 404)
 		return
 	}
 	defer cur.Close(ctx)
 
-	var people []*Person
+	var people []*model.Person
 
 	for cur.Next(ctx) {
-		person := &Person{}
+		person := &model.Person{}
 		err := cur.Decode(person)
 		if err != nil {
 			log.Fatal(err)

@@ -22,13 +22,21 @@ services:
 
   go_compose:
     container_name: go_compose
-    build: ./populate/
+    build:
+      context: ./
+      dockerfile: Dockerfile_pop
+    depends_on: 
+      - mongo_compose
 
   go_api_compose:
     container_name: go_api_compose
-    build: ./api/
+    build:
+      context: ./
+      dockerfile: Dockerfile_api
     ports:
       - "7777:7777"
+    depends_on: 
+      - mongo_compose
     
 
 volumes:
